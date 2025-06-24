@@ -17,7 +17,7 @@ function App() {
       <Card className='w-full max-w-sm mx-auto'>
         <CardHeader className='flex-col gap-2'>
           <CardTitle className='font-unbounded text-2xl'>Child Bounty Claimer</CardTitle>
-          <CardDescription className='font-unbounded font-light'>Easily claim your child bounties</CardDescription>
+          <CardDescription className='font-unbounded font-light text-gray-800'>Easily claim your child bounties</CardDescription>
         </CardHeader>
         <CardContent>
           {
