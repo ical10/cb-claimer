@@ -3,6 +3,7 @@ import { dot } from "@polkadot-api/descriptors";
 import { defineConfig } from "@reactive-dot/core";
 import { createLightClientProvider } from "@reactive-dot/core/providers/light-client.js";
 import { InjectedWalletProvider } from "@reactive-dot/core/wallets.js";
+import { registerDotConnect } from "dot-connect";
 
 const lightClientProvider = createLightClientProvider();
 
@@ -16,3 +17,7 @@ export const config = defineConfig({
   },
   wallets: [new InjectedWalletProvider()],
 });
+
+registerDotConnect({
+  wallets: config.wallets,
+})

@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "@polkadot-api/descriptors": "file:.papi/descriptors",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-slot": "^1.2.3",
     "@reactive-dot/react": "^0.43.1",
     "@tailwindcss/vite": "^4.1.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dot-connect": "^0.19.0",
     "lucide-react": "^0.522.0",
     "polkadot-api": "^1.14.1",
     "react": "^19.1.0",
