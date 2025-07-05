@@ -1,9 +1,9 @@
 // `dot` is the name we gave to `npx papi add`
-import { dot } from "@polkadot-api/descriptors";
-import { defineConfig } from "@reactive-dot/core";
-import { createLightClientProvider } from "@reactive-dot/core/providers/light-client.js";
-import { InjectedWalletProvider } from "@reactive-dot/core/wallets.js";
-import { registerDotConnect } from "dot-connect";
+import { dot } from '@polkadot-api/descriptors';
+import { defineConfig } from '@reactive-dot/core';
+import { createLightClientProvider } from '@reactive-dot/core/providers/light-client.js';
+import { InjectedWalletProvider } from '@reactive-dot/core/wallets.js';
+import { registerDotConnect } from 'dot-connect';
 
 const lightClientProvider = createLightClientProvider();
 
@@ -12,7 +12,7 @@ export const config = defineConfig({
     // "polkadot" here can be any unique string value
     polkadot: {
       descriptor: dot,
-      provider: lightClientProvider.addRelayChain({ id: "polkadot" }),
+      provider: lightClientProvider.addRelayChain({ id: 'polkadot' }),
     },
   },
   wallets: [new InjectedWalletProvider()],
@@ -20,4 +20,4 @@ export const config = defineConfig({
 
 registerDotConnect({
   wallets: config.wallets,
-})
+});
