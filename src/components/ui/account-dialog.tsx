@@ -1,10 +1,8 @@
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -53,10 +51,8 @@ export function AccountDialogCloseButton({
             Select your account to check and claim your rewards.
           </DialogDescription>
         </DialogHeader>
-        <div className='flex items-center gap-2'>
-          <div className='grid flex-1 gap-2'>
-            <Accounts onAccountChange={handleAccountChange} />
-          </div>
+        <div className='flex items-center justify-center'>
+          <Accounts onAccountChange={handleAccountChange} />
         </div>
       </DialogContent>
     </Dialog>
