@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { createClient } from 'polkadot-api';
+import { createClient, type PolkadotSigner } from 'polkadot-api';
 import { getSmProvider } from 'polkadot-api/sm-provider';
 import { start } from 'polkadot-api/smoldot';
 import { chainSpec as dotChainSpec } from 'polkadot-api/chains/polkadot';
 import { dot } from '@polkadot-api/descriptors';
+import type { InjectedPolkadotAccount } from 'polkadot-api/pjs-signer';
 
 type ChildBountyData = {
   parentBountyId: number;
@@ -11,6 +12,11 @@ type ChildBountyData = {
   beneficiary: string;
   amount: string;
   formattedAmount: string;
+};
+
+type ClaimChildBountyArgs = {
+  parentBountyId: number;
+  childBountyId: number;
 };
 
 export function useChildBounties(address: string | null) {
@@ -107,5 +113,53 @@ export function useChildBounties(address: string | null) {
     fetchChildBounties();
   }, [address]);
 
-  return { childBounties, loading, error };
+  const claimChildBounties = async (
+    childBountyIdxs: ClaimChildBountyArgs[],
+    account: InjectedPolkadotAccount
+  ) => {
+    // Start smoldot and setup its chains
+    const smoldot = start();
+    const dotChain = smoldot.addChain({ chainSpec: dotChainSpec });
+
+    // Create the clients and their typedApis
+    const dotClient = createClient(getSmProvider(dotChain));
+    const dotApi = dotClient.getTypedApi(dot);
+
+    try {
+      // Wait until we have received the initial block
+      await dotApi.compatibilityToken;
+
+      const claimCalls = await Promise.all(
+        childBountyIdxs.map(idx =>
+          dotApi.tx.ChildBounties.claim_child_bounty({
+            parent_bounty_id: idx.parentBountyId,
+            child_bounty_id: idx.childBountyId,
+          })
+        )
+      );
+
+      const batchCall = await dotApi.tx.Utility.batch({
+        calls: claimCalls.map(call => call.decodedCall),
+      });
+
+      const signed = await batchCall.signAndSubmit(account.polkadotSigner);
+      console.log(signed);
+
+      dotClient.destroy();
+      await smoldot.terminate();
+    } catch (err) {
+      // Ignore error when user cancel signing
+      if (err instanceof Error && err.message === 'Cancelled') {
+        return;
+      }
+
+      setError(
+        err instanceof Error ? err.message : 'Failed to claim child bounties'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { claimChildBounties, childBounties, loading, error };
 }

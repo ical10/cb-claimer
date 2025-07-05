@@ -25,9 +25,8 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
   );
   const [open, setOpen] = useState(false);
 
-  const { childBounties, loading, error } = useChildBounties(
-    selectedAccount?.address || null
-  );
+  const { childBounties, loading, error, claimChildBounties } =
+    useChildBounties(selectedAccount?.address || null);
 
   const handleAccountChange = (account: WalletAccount) => {
     setSelectedAccount(account);
@@ -112,6 +111,13 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
                 </Card>
               ))}
             </div>
+          )}
+          {selectedAccount && childBounties.length > 0 && !loading && (
+            <Button
+              onClick={() => claimChildBounties(childBounties, selectedAccount)}
+            >
+              Claim Child Bounties
+            </Button>
           )}
         </CardFooter>
       </Card>
