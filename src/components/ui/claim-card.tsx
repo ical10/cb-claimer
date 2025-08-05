@@ -7,12 +7,18 @@ import {
   CardFooter,
 } from './card';
 import { Button } from './button';
-import { useConnectedWallets } from '@reactive-dot/react';
+import { useConnectedWallets, useAccounts } from '@reactive-dot/react';
 import { AccountDialogCloseButton } from './account-dialog';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { WalletAccount } from '@reactive-dot/core/wallets.js';
 import { truncateAddress } from '@/components/lib/strings';
 import { useChildBounties } from '@/components/lib/use-child-bounties';
+import { idle, pending, MutationError } from '@reactive-dot/core';
+import {
+  saveSelectedAccount,
+  loadSelectedAccount,
+  clearSelectedAccount,
+} from '@/components/lib/account-storage';
 
 type ClaimCardProps = {
   onWalletOpen: (opened: boolean) => void;
@@ -24,18 +30,51 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
     null
   );
   const [open, setOpen] = useState(false);
+  const [isAccountFromStorage, setIsAccountFromStorage] = useState(false);
 
-  const { childBounties, loading, error, claimChildBounties } =
-    useChildBounties(selectedAccount?.address || null);
+  const allAccounts = useAccounts();
+
+  const {
+    childBounties,
+    loading,
+    error,
+    claimChildBounties,
+    claimState,
+    isRefetching,
+  } = useChildBounties(selectedAccount?.address || null);
+
+  useEffect(() => {
+    if (connectedWallets.length > 0 && allAccounts.length > 0) {
+      const storedAccount = loadSelectedAccount(allAccounts);
+      if (storedAccount) {
+        setSelectedAccount(storedAccount);
+        setIsAccountFromStorage(true);
+        console.log('Loaded account from storage:', storedAccount.name);
+      }
+    }
+  }, [connectedWallets, allAccounts]);
+
+  useEffect(() => {
+    if (connectedWallets.length === 0 && selectedAccount) {
+      setSelectedAccount(null);
+      clearSelectedAccount();
+      setIsAccountFromStorage(false);
+      console.log('Wallets disconnected, cleared stored account');
+    }
+  }, [connectedWallets, selectedAccount]);
 
   const handleAccountChange = (account: WalletAccount) => {
     setSelectedAccount(account);
+    saveSelectedAccount(account);
+    setIsAccountFromStorage(false);
   };
 
   const handleDisconnectWallet = () => {
     onWalletOpen(true);
     setOpen(false);
     setSelectedAccount(null);
+    clearSelectedAccount();
+    setIsAccountFromStorage(false);
   };
 
   return (
@@ -60,11 +99,21 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
               onAccountChange={handleAccountChange}
               open={open}
               setOpen={setOpen}
+              selectedAccount={selectedAccount}
             />
           )}
           {selectedAccount && (
             <div className='text-center p-2 bg-muted/50 rounded-md'>
-              <p className='text-sm text-muted-foreground'>Selected Account:</p>
+              <div className='flex items-center justify-center gap-1 mb-1'>
+                <p className='text-sm text-muted-foreground'>
+                  Selected Account:
+                </p>
+                {isAccountFromStorage && (
+                  <span className='text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full'>
+                    Auto-loaded
+                  </span>
+                )}
+              </div>
               <p className='text-sm font-medium'>{selectedAccount.name}</p>
               <p className='text-xs text-muted-foreground'>
                 {truncateAddress(selectedAccount.address)}
@@ -77,7 +126,7 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
             <p className='text-sm text-muted-foreground'>
               Connect wallet and select account to view rewards
             </p>
-          ) : loading ? (
+          ) : loading && !isRefetching ? (
             <p className='text-sm text-muted-foreground'>
               Loading child bounties...
             </p>
@@ -113,11 +162,40 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
             </div>
           )}
           {selectedAccount && childBounties.length > 0 && !loading && (
-            <Button
-              onClick={() => claimChildBounties(childBounties, selectedAccount)}
-            >
-              Claim Child Bounties
-            </Button>
+            <>
+              <Button
+                onClick={() =>
+                  claimChildBounties(childBounties, selectedAccount)
+                }
+                disabled={claimState === pending}
+              >
+                {claimState === pending
+                  ? 'Claiming...'
+                  : 'Claim Child Bounties'}
+              </Button>
+
+              {/* Show claim status */}
+              {claimState === pending && (
+                <p className='text-sm text-blue-600'>Transaction pending...</p>
+              )}
+              {claimState instanceof MutationError && (
+                <p className='text-sm text-red-500'>
+                  Claim failed: {claimState.message || 'Unknown error'}
+                </p>
+              )}
+              {claimState !== idle &&
+                claimState !== pending &&
+                !(claimState instanceof MutationError) && (
+                  <p className='text-sm text-green-600'>
+                    Claims submitted successfully!
+                  </p>
+                )}
+
+              {/* Show refetching status */}
+              {isRefetching && (
+                <p className='text-sm text-blue-600'>Updating bounty list...</p>
+              )}
+            </>
           )}
         </CardFooter>
       </Card>

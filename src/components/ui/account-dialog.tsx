@@ -10,25 +10,21 @@ import {
 import { Accounts } from './accounts';
 import type { WalletAccount } from '@reactive-dot/core/wallets.js';
 import { truncateAddress } from '../lib/strings';
-import { useState } from 'react';
 
 type AccountDialogCloseButtonProps = {
   onAccountChange: (account: WalletAccount) => void;
   open: boolean;
   setOpen: (open: boolean) => void;
+  selectedAccount?: WalletAccount | null;
 };
 
 export function AccountDialogCloseButton({
   onAccountChange,
   open,
   setOpen,
+  selectedAccount,
 }: AccountDialogCloseButtonProps) {
-  const [selectedAccount, setSelectedAccount] = useState<WalletAccount | null>(
-    null
-  );
-
   const handleAccountChange = (account: WalletAccount) => {
-    setSelectedAccount(account);
     onAccountChange(account);
     setOpen(false);
   };
