@@ -13,7 +13,7 @@ import { useState, useEffect } from 'react';
 import type { WalletAccount } from '@reactive-dot/core/wallets.js';
 import { truncateAddress } from '@/components/lib/strings';
 import { useChildBounties } from '@/components/lib/use-child-bounties';
-import { idle, pending, MutationError } from '@reactive-dot/core';
+import { MutationError } from '@reactive-dot/core';
 import {
   saveSelectedAccount,
   loadSelectedAccount,
@@ -32,7 +32,7 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
   const [open, setOpen] = useState(false);
   const [isAccountFromStorage, setIsAccountFromStorage] = useState(false);
 
-  const allAccounts = useAccounts();
+  const accounts = useAccounts();
 
   const {
     childBounties,
@@ -44,15 +44,15 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
   } = useChildBounties(selectedAccount?.address || null);
 
   useEffect(() => {
-    if (connectedWallets.length > 0 && allAccounts.length > 0) {
-      const storedAccount = loadSelectedAccount(allAccounts);
+    if (connectedWallets.length > 0 && accounts.length > 0) {
+      const storedAccount = loadSelectedAccount(accounts);
       if (storedAccount) {
         setSelectedAccount(storedAccount);
         setIsAccountFromStorage(true);
         console.log('Loaded account from storage:', storedAccount.name);
       }
     }
-  }, [connectedWallets, allAccounts]);
+  }, [connectedWallets, accounts]);
 
   useEffect(() => {
     if (connectedWallets.length === 0 && selectedAccount) {
@@ -167,25 +167,40 @@ function ClaimCard({ onWalletOpen }: ClaimCardProps) {
                 onClick={() =>
                   claimChildBounties(childBounties, selectedAccount)
                 }
-                disabled={claimState === pending}
+                disabled={
+                  claimState &&
+                  typeof claimState === 'object' &&
+                  'type' in claimState &&
+                  claimState.type === 'signed'
+                }
               >
-                {claimState === pending
+                {claimState &&
+                typeof claimState === 'object' &&
+                'type' in claimState &&
+                claimState.type === 'signed'
                   ? 'Claiming...'
                   : 'Claim Child Bounties'}
               </Button>
 
               {/* Show claim status */}
-              {claimState === pending && (
-                <p className='text-sm text-blue-600'>Transaction pending...</p>
-              )}
+              {claimState &&
+                typeof claimState === 'object' &&
+                'type' in claimState &&
+                claimState.type === 'signed' && (
+                  <p className='text-sm text-blue-600'>
+                    Transaction pending...
+                  </p>
+                )}
               {claimState instanceof MutationError && (
                 <p className='text-sm text-red-500'>
                   Claim failed: {claimState.message || 'Unknown error'}
                 </p>
               )}
-              {claimState !== idle &&
-                claimState !== pending &&
-                !(claimState instanceof MutationError) && (
+              {claimState &&
+                typeof claimState === 'object' &&
+                !(claimState instanceof MutationError) &&
+                'type' in claimState &&
+                claimState.type === 'finalized' && (
                   <p className='text-sm text-green-600'>
                     Claims submitted successfully!
                   </p>

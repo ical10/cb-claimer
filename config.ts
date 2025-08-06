@@ -8,6 +8,7 @@ import { registerDotConnect } from 'dot-connect';
 const lightClientProvider = createLightClientProvider();
 
 export const config = defineConfig({
+  wallets: [new InjectedWalletProvider()],
   chains: {
     // "polkadot" here can be any unique string value
     polkadot: {
@@ -15,9 +16,9 @@ export const config = defineConfig({
       provider: lightClientProvider.addRelayChain({ id: 'polkadot' }),
     },
   },
-  wallets: [new InjectedWalletProvider()],
 });
 
 registerDotConnect({
+  // @ts-expect-error - TODO: fix this
   wallets: config.wallets,
 });

@@ -23,5 +23,14 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.development
+
 # Cursor Rules
 .cursor/rules
+
+# Local Netlify folder
+.netlify

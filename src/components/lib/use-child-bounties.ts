@@ -7,7 +7,7 @@ import { createClient } from 'polkadot-api';
 import { dot } from '@polkadot-api/descriptors';
 import type { WalletAccount } from '@reactive-dot/core/wallets.js';
 import { useMutation } from '@reactive-dot/react';
-import { idle, pending, MutationError } from '@reactive-dot/core';
+import { MutationError } from '@reactive-dot/core';
 import { getWsProvider } from 'polkadot-api/ws-provider/web';
 
 type ChildBountyData = {
@@ -130,12 +130,13 @@ export function useChildBounties(address: string | null) {
     fetchChildBounties(address);
   }, [address]);
 
-  // Refetch bounties after successful claim
   useEffect(() => {
     const isClaimSuccessful =
-      claimState !== idle &&
-      claimState !== pending &&
-      !(claimState instanceof MutationError);
+      claimState &&
+      typeof claimState === 'object' &&
+      !(claimState instanceof MutationError) &&
+      'type' in claimState &&
+      claimState.type === 'finalized';
 
     if (isClaimSuccessful && address) {
       console.log('Claim successful, refetching bounties...');
